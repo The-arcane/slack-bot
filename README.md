@@ -188,8 +188,8 @@ Produces implementation-ready instructions instead of generic AI responses.
 ### Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/slack-ai-agent-builder.git
-cd slack-ai-agent-builder
+git clone https://github.com/The-arcane/slack-bot.git
+cd slack-bot
 ```
 
 ### Import Workflow
