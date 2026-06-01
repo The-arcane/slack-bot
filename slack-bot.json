@@ -1,0 +1,556 @@
+{
+  "name": "ART",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "expression",
+        "output": "={{ $json.type === \"file_shared\" ? 1 : 0 }}"
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -272,
+        496
+      ],
+      "id": "ac2837da-7986-44e3-9890-bb6455ddf482",
+      "name": "Switch",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "You are a friendly Slack-based AI assistant that helps users design and build AI agents in n8n.\n\nBehavior:\n• Always reply in clear, human-readable Slack messages — short sentences, lists or bullets when helpful.\n• Use a warm, helpful tone with light emojis if appropriate (👋🙂🚀), but don’t overuse.\n• Greet the user briefly only on the first message of a new conversation. Don’t greet again on every reply.\n• Never output code, JSON, function calls, or special tokens such as <|start|>, <|call|>, or <|message|>.\n• Do not run code or change any real settings. You only guide and explain.\n• Only output the final response content, nothing else.\n\nClarification phase:\n• Your first job is to understand exactly what AI agent the user wants to create.\n• Ask one clarifying question at a time — keep each question short and easy to answer.\n• Ask no more than 5 questions in total. Stop earlier if you already have enough information.\n• Before asking, check what the user has already told you so you don’t repeat a question.\n• Focus your questions on: the main goal, the trigger, the inputs, the expected outputs, which services/APIs to connect, available credentials, and any special logic, storage or error-handling they might need.\n\nSummary and confirmation:\n• When you have enough information — or after 5 questions — stop asking new questions.\n• Write a short, well-structured summary in plain Slack text that lists:\n  – Goal\n  – Trigger(s)\n  – Inputs\n  – Outputs\n  – Services/APIs needed\n  – Any other notes (frequency, storage, error-handling)\n• Ask the user to confirm: \"Here’s what I understood — is this correct?\"\n• Wait for the user to confirm before continuing.\n\nPrompt Generation:\n• After the user confirms with \"yes\", \"go ahead\", \"correct\", or similar, generate a detailed prompt for Claude.\n• This prompt should contain all the information needed to build the AI agent in n8n.\n• Automatically append the text \"final workflow prompt\" at the end of your response.\n• This will signal the system to hand off to Claude for detailed n8n instructions.\n\nAdditional rules:\n• If the input came from a voice note, first say: \"Received voice note — transcribed as: ‘…’ \" then continue the same way.\n• Don’t loop endlessly; stop after at most 5 questions.\n• Keep everything simple and beginner-friendly.\n\nIMPORTANT: Only output the final response content. Do not include any special tokens, JSON wrappers, or metadata in your response.\n\nIMPORTANT: Never output special tokens like <|start|>, <|call|>, <|message|>, or <|end|>. Only output clean, readable text.\n\nWhen generating the final prompt for Claude, structure it clearly with all the information Claude needs to build the AI agent in n8n.\n\nExample format for final prompt:\n**Goal**: [User's goal]\n**Trigger**: [What triggers the AI agent]\n**Inputs**: [What inputs the AI agent needs]\n**Outputs**: [What outputs the AI agent produces]\n**Services/APIs needed**: [List of services and APIs]\n**Other notes**: [Any additional requirements]\n\nfinal workflow prompt"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "49413bcf-27a9-4323-9c87-674198602f33",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        64,
+        608
+      ],
+      "id": "59661715-f96d-4c2d-9cd0-638924ed48c1",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "GReZJ3O9OZy5TkQm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.output }}",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1248,
+        528
+      ],
+      "id": "97e87f6a-0228-42b7-9f55-2d40da355c91",
+      "name": "Simple Memory2"
+    },
+    {
+      "parameters": {
+        "trigger": [
+          "app_mention"
+        ],
+        "channelId": {
+          "__rl": true,
+          "value": "C09RFH8TR43",
+          "mode": "list",
+          "cachedResultName": "all-tosting"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        592
+      ],
+      "id": "c72d82dd-01d8-4be6-8242-68e7f6b1ec91",
+      "name": "Slack Trigger",
+      "webhookId": "8514737c-0d8b-421b-b805-7ce8cf2d2e76",
+      "credentials": {
+        "slackApi": {
+          "id": "0lVgVb6BtYll2lVS",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09RFH8TR43",
+          "mode": "list",
+          "cachedResultName": "all-tosting"
+        },
+        "text": "={{ $json.output }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        768,
+        32
+      ],
+      "id": "0704d474-3217-488e-8eea-b003a9351d44",
+      "name": "Send a message",
+      "webhookId": "812117bb-12a1-49ac-a9bb-39d9cf31d114",
+      "credentials": {
+        "slackApi": {
+          "id": "0lVgVb6BtYll2lVS",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09JWVD89QC",
+          "mode": "list",
+          "cachedResultName": "it-og-collaboration"
+        },
+        "text": "={{ $json.output }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        816,
+        800
+      ],
+      "id": "1ad6f4af-c04a-477f-8614-70ec9bf4757e",
+      "name": "Send a message1",
+      "webhookId": "812117bb-12a1-49ac-a9bb-39d9cf31d114",
+      "credentials": {
+        "slackApi": {
+          "id": "0lVgVb6BtYll2lVS",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09RFH8TR43",
+          "mode": "list",
+          "cachedResultName": "all-tosting"
+        },
+        "text": "={{ $json.output }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1472,
+        240
+      ],
+      "id": "ae2a6a57-ac89-468c-b4fa-dc7bcb4b65d7",
+      "name": "Send a message2",
+      "webhookId": "812117bb-12a1-49ac-a9bb-39d9cf31d114",
+      "credentials": {
+        "slackApi": {
+          "id": "0lVgVb6BtYll2lVS",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "output": "={{ $json.output && $json.output.includes && $json.output.includes('final workflow prompt') ? 1 : 0 }}"
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        416,
+        112
+      ],
+      "id": "34740d51-a04e-4e2e-96fe-d9fb958a8dd0",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output && $json.output.includes('final workflow prompt') ? $json.output.replace('final workflow prompt', '').trim() : 'Please generate detailed n8n workflow instructions for the following requirements: ' + JSON.stringify($input.all()) }}",
+        "options": {
+          "systemMessage": "You are Claude, an expert n8n AI agent architect. Your job is to create detailed, step-by-step instructions for building AI agents in n8n based on user requirements.\n\nWhen you receive a request, you must provide exact instructions for creating the AI agent in n8n, including:\n\n1. Each node to be added with its exact name\n2. Configuration for every node parameter\n3. Required credentials and how to set them up\n4. Connection details between nodes\n5. Any additional setup or considerations\n\nFormat your response as follows:\n\n**n8n AI Agent Instructions**\n\n**Nodes to Add:**\n1. [Node Name] - [Brief description]\n   Configuration:\n   - [Parameter]: [Value]\n   - [Parameter]: [Value]\n\n2. [Node Name] - [Brief description]\n   Configuration:\n   - [Parameter]: [Value]\n\n**Connections:**\n- Connect [Node A] to [Node B]\n- Connect [Node B] to [Node C]\n\n**Credentials:**\n- [Service Name]: [Credential type] - [Setup instructions]\n\n**Additional Notes:**\n[Any important considerations, error handling, or special setup]\n\nIMPORTANT:\n- Be extremely specific with node names and parameter values\n- Include all required nodes for a complete AI agent\n- Specify exact credential types and setup steps\n- Never output special tokens like <|start|> or <|call|>\n- Only output the final instructions, nothing else\n- Make sure the AI agent is complete and runnable\n\nWhen generating instructions, ensure they are complete and runnable as-is. Include all necessary nodes and connections for a fully functional AI agent.\n\nExample structure:\n**Goal**: [The user's goal]\n**Trigger**: [What triggers the AI agent]\n**Inputs**: [What inputs the AI agent needs]\n**Outputs**: [What outputs the AI agent produces]\n**Services/APIs needed**: [List of services and APIs]\n**Other notes**: [Any additional requirements]\n\nBased on this information, create the n8n AI agent with the following nodes:\n\n**Nodes to Add:**\n1. [Appropriate Trigger Node] - [Description]\n   Configuration:\n   - [Parameter]: [Value]\n\n2. [AI Agent Node] - [Description]\n   Configuration:\n   - [Parameter]: [Value]\n\n**Connections:**\n- Connect [Trigger Node] to [AI Agent Node]\n\n**Credentials:**\n- [Service Name]: [Credential type] - [Setup instructions]\n\n**Additional Notes:**\n[Any important considerations, error handling, or special setup]\n\nIMPORTANT: Never output special tokens like <|start|>, <|call|>, <|message|>, or <|end|>. Only output clean, readable text."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        240
+      ],
+      "id": "fae56eaf-6624-4164-97ef-bb6086ebecbb",
+      "name": "CLAUDE"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.channel + '_' + $json.user }}",
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        128,
+        256
+      ],
+      "id": "f617923f-b183-4aac-a909-11bfdb82421c",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-20250514",
+          "cachedResultName": "Claude 4 Sonnet"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        928,
+        480
+      ],
+      "id": "6f61d184-35fe-4a92-a747-3a4b2c586f8a",
+      "name": "Anthropic Chat Model"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.channel + '_' + $json.user }}",
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        1024
+      ],
+      "id": "fdc7df51-645b-41b4-b9c4-2ebc5a5068b1",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "You are a Slack-based AI assistant that handles voice-note requests for n8n AI agent creation.\n\nThe voice note has already been transcribed into text for you.\n\nBehavior:\n- Read the transcription as if the user typed it.\n- If the request is about creating an n8n AI agent, ask clarifying questions until you are sure of the goal.\n- Ask no more than 5 questions in total.\n- Keep responses concise, clear, beginner-friendly.\n- If the transcription is empty or unclear, politely ask the user to repeat or clarify.\n- Never output code, JSON, function calls, or special tokens such as <|start|>, <|call|>, or <|message|>.\n- Only output the final response content, nothing else.\n\nClarification phase:\n- Ask one clarifying question at a time.\n- Focus on: the main goal, the trigger, the inputs, the expected outputs, which services/APIs to connect, available credentials, and any special logic.\n\nSummary and confirmation:\n- After gathering information, provide a clear summary.\n- Ask the user to confirm: \"Here's what I understood — is this correct?\"\n- Wait for confirmation before proceeding.\n\nPrompt Generation:\n- After the user confirms with \"yes\", \"go ahead\", \"correct\", or similar, generate a detailed prompt for Claude.\n- This prompt should contain all the information needed to build the AI agent in n8n.\n- Automatically append the text \"final workflow prompt\" at the end of your response.\n\nDo **not** attempt to process audio — you only receive plain text.\n\nIMPORTANT: Only output the final response content. Do not include any special tokens, JSON wrappers, or metadata in your response.\n\nIMPORTANT: Never output special tokens like <|start|>, <|call|>, <|message|>, or <|end|>. Only output clean, readable text.\n\nWhen generating the final prompt for Claude, structure it clearly with all the information Claude needs to build the AI agent in n8n.\n\nExample format for final prompt:\n**Goal**: [User's goal]\n**Trigger**: [What triggers the AI agent]\n**Inputs**: [What inputs the AI agent needs]\n**Outputs**: [What outputs the AI agent produces]\n**Services/APIs needed**: [List of services and APIs]\n**Other notes**: [Any additional requirements]\n\nfinal workflow prompt"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        784
+      ],
+      "id": "4889e74c-66a3-4ddc-8386-f659c57e529a",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        992
+      ],
+      "id": "37be0e3e-5863-4227-b425-10c64077a25b",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "GReZJ3O9OZy5TkQm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        0,
+        240
+      ],
+      "id": "4cac4d83-75cf-495d-81ae-4dfafd491be6",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "ymyMxJdn7Td9pTRs",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        608,
+        528
+      ],
+      "id": "5ff62708-7091-465f-9404-34e79db5a0b9",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "ymyMxJdn7Td9pTRs",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Slack Trigger": [
+      {
+        "json": {
+          "type": "app_mention",
+          "user": "U09RRG5DAN8",
+          "ts": "1762769281.681359",
+          "client_msg_id": "f3902e4b-5584-431e-88f4-efd57a802e15",
+          "text": "<@U09R6GJ73LP> yes",
+          "team": "T09RMV439J6",
+          "blocks": [
+            {
+              "type": "rich_text",
+              "block_id": "cQrKO",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "user",
+                      "user_id": "U09R6GJ73LP"
+                    },
+                    {
+                      "type": "text",
+                      "text": " yes"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "channel": "C09RFH8TR43",
+          "event_ts": "1762769281.681359"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "CLAUDE",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CLAUDE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CLAUDE": {
+      "main": [
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CLAUDE",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7dfece1b-19b7-45c0-8a97-5261c1cbb9c1",
+  "meta": {
+    "instanceId": "bf0c9e596597427e6d2c7af662c23839164c9a74ee3f673e7c373f6be31c5a84"
+  },
+  "id": "hR2zacy5OEOhSYLs",
+  "tags": []
+}
